@@ -46,6 +46,8 @@ INSTALLED_APPS = [
 
     'rest_framework', 
     'django_filters',
+
+    'news',
 ]
 
 MIDDLEWARE = [
@@ -202,3 +204,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     )
 }
+
+
+# The news api client settings
+TNA_API_KEY = get_secret('TNA_API_KEY')
+TNA_PAGE_SIZE = 100 # 100 max
