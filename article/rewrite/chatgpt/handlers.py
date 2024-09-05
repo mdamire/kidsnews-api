@@ -38,5 +38,6 @@ async def rewrite_articles_for_kids(article_records: list[ArticleRecord]) -> lis
         article_records[rw_id].modified_title = rw_title
         article_records[rw_id].modified_content = rw_content
         article_records[rw_id].modified_description = rw_description
+        article_records[rw_id].has_rewritten = True
         
     return article_records

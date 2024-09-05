@@ -1,9 +1,14 @@
+import uuid
+
 from django.db import models
 
 from model_utils.models import TimeStampedModel
 
 
 class ArticleRecord(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    reference = models.UUIDField(unique=True)
+
     author = models.CharField(max_length=500)
     published_at = models.DateTimeField()
 

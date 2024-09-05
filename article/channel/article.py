@@ -1,4 +1,5 @@
 import re
+import uuid
 
 from article.models import ArticleRecord
 
@@ -21,6 +22,7 @@ class Article():
         self.content = content
         self.response = response
         self.description = description
+        self.reference = uuid.uuid4()
 
         if url and _is_url(url):
             self.url = url
@@ -42,6 +44,7 @@ class ArticlePage():
     async def abulk_create(self):
         record_objs = [
             ArticleRecord(
+                reference=article.reference,
                 author=article.author,
                 published_at=article.published_at,
                 original_title=article.title,
@@ -55,4 +58,6 @@ class ArticlePage():
             for article in self.articles
         ]
 
-        return await ArticleRecord.objects.abulk_create(record_objs)
+        records = await ArticleRecord.objects.abulk_create(record_objs, ignore_conflicts=True)
+        
+        return records
