@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -225,3 +226,18 @@ TNA_PAGE_SIZE = 100 # 100 max
 
 # ChatGPT settings
 CHATGPT_API_KEY = get_secret('CHATGPT_API_KEY')
+
+
+# Celery configuration
+
+CELERY_BROKER_URL = get_secret('CELERY_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
+CELERY_TASK_DEFAULT_QUEUE = 'kidsnews'
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+CELERY_BEAT_SCHEDULE = {
+    'fetch-and-rewrite-news-every-6-hours': {
+        'task': 'article.tasks.scheduled_featch_and_rewrite_news_articles',
+        'schedule': crontab(minute=0, hour='*/6'),  # Run every 6 hours
+        'args': (6,),
+    },
+}

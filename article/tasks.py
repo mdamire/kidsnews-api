@@ -1,5 +1,8 @@
 import logging
 import asyncio
+from datetime import datetime
+
+from django.utils import timezone
 
 from .channel.newsapi.handlers import async_get_article_pages
 from .channel.article import ArticlePage
@@ -39,3 +42,10 @@ async def async_featch_and_rewrite_news_articles(date_from, date_to):
 def featch_and_rewrite_news_articles(date_from, date_to):
     # keep a single async event loop
     asyncio.run(async_featch_and_rewrite_news_articles(date_from, date_to))
+
+
+def scheduled_featch_and_rewrite_news_articles(hours):
+    date_from = timezone.now() - datetime(hour=hours)
+    date_to = timezone.now()
+
+    featch_and_rewrite_news_articles(date_from, date_to)
