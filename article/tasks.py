@@ -15,8 +15,15 @@ _log = logging.getLogger(__name__)
 
 
 async def save_rewrite_save(article_page: ArticlePage):
+    _log.debug(f"Save rewrite save function started for article page number: {article_page.page_number}")
+
     # save featched data
     article_objs = await article_page.abulk_create()
+
+    _log.debug(
+        f"Article objects created: {len(article_objs)}" +
+        f"for article page number: {article_page.page_number}"
+    )
 
     # audit for words
     article_objs = check_article_title_for_bad_words(article_objs)
@@ -27,12 +34,18 @@ async def save_rewrite_save(article_page: ArticlePage):
     # save contents
     await article_record_abulk_update(article_objs)
 
+    _log.debug(f"Objects processing finished for article page number: {article_page.page_number}")
+
     return len(article_objs)
 
 
 async def async_featch_and_rewrite_news_articles(date_from, date_to):
+    _log.debug(f"data fetching started from {date_from} to {date_to}")
+
     # fetch data from channel
     article_pages = await async_get_article_pages(date_from, date_to)
+
+    _log.debug(f"Number of article pages fetched: {len(article_pages)}")
 
     coro_tasks = [
         save_rewrite_save(article_page)
@@ -50,7 +63,7 @@ async def async_featch_and_rewrite_news_articles(date_from, date_to):
 def featch_and_rewrite_news_articles(date_from, date_to):
     # keep a single async event loop
     count = asyncio.run(async_featch_and_rewrite_news_articles(date_from, date_to))
-    
+
     return count
 
 

@@ -52,6 +52,8 @@ services:
       - DB_PASSWORD=password
       - DB_HOST=postgres
       - DB_PORT=5432
+      # - TNA_API_KEY=<api_key>     # news api api_key
+      # - CHATGPT_API_KEY=<api_key> # chat gpt api key
     volumes:
       - ./:/app
     working_dir: /app

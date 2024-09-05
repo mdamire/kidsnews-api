@@ -3,6 +3,9 @@ from .client import send_request_to_chatgpt
 
 
 async def rewrite_articles_for_kids(article_records: list[ArticleRecord]) -> list[ArticleRecord]:
+    """Rewrites news for kids. Skips if it contains inappropriate words for kids
+    """
+    
     # Construct the prompt for ChatGPT
     prompt = "Rewrite the following articles for kids in simple language. Maintain the ID for each article:\n\n"
     

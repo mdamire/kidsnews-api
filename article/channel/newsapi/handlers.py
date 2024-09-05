@@ -60,6 +60,11 @@ async def fetch_newsapi_article_page(date_from, date_to, page) -> ArticlePage:
 
 
 async def async_get_article_pages(date_from, date_to) -> list[ArticlePage]:
+    """Gets the article data from newapi.
+    First it retrives 1 page data and then spaws concurrent processes to fetch other page data.
+
+    Returns a list of ArticlePage data
+    """
     total_results, article_page_1 = await fetch_newsapi_article_page(
         date_from, 
         date_to, 
