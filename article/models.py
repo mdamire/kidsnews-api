@@ -41,6 +41,3 @@ class ArticleRecord(models.Model):
 
     def __str__(self):
         return self.modified_title or self.original_title
-
-
-

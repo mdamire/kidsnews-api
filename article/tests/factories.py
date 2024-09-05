@@ -1,3 +1,4 @@
+import uuid
 import random
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -120,6 +121,8 @@ class ArticleRecordFactory(DjangoModelFactory):
     class Meta:
         model = ArticleRecord
 
+    reference = factory.LazyFunction(uuid.uuid4)
+    
     author = factory.Faker('name')
     published_at = factory.LazyFunction(timezone.now)
 
