@@ -209,3 +209,7 @@ REST_FRAMEWORK = {
 # The news api client settings
 TNA_API_KEY = get_secret('TNA_API_KEY')
 TNA_PAGE_SIZE = 100 # 100 max
+
+
+# ChatGPT settings
+CHATGPT_API_KEY = get_secret('CHATGPT_API_KEY')

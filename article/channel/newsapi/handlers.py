@@ -6,8 +6,8 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 
+from article.article import ArticlePage, Article
 from .client import NewsApiClient
-from ..article import ArticlePage, Article
 
 
 log = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ async def async_get_article_pages(date_from, date_to) -> list[ArticlePage]:
         ]
 
         article_pages = await asyncio.gather(*tasks)
-        
+
     else:
         article_pages = []
 
