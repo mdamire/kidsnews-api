@@ -1,0 +1,6 @@
+
+def bulk_save():
+    ...
+
+def abulk_save():
+    ...

@@ -11,16 +11,16 @@ class TestChatGptHandlers(TestCase):
 
     def test_rewrite_articles_for_kids(self):
 
-        article_page = factories.make_article_page(3, 1)
+        article_records = [ factories.ArticleRecordFactory() for i in range(5)]
 
         with patch('article.rewrite.chatgpt.client.aiohttp.ClientSession.post') as patched:
-            patched.return_value = factories.ChatGptResponseFactory(3)
+            patched.return_value = factories.ChatGptResponseFactory(5)
 
             m_article_page = asyncio.run(
-                handlers.rewrite_articles_for_kids(article_page)
+                handlers.rewrite_articles_for_kids(article_records)
             )
 
-            for a in m_article_page.articles:
+            for a in m_article_page:
                 self.assertIsNotNone(a.modified_title)
                 self.assertIsNotNone(a.modified_content)
                 self.assertIsNotNone(a.modified_description)

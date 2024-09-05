@@ -1,6 +1,6 @@
 import re
 
-from .article import ArticlePage
+from .models import ArticleRecord
 
 
 bad_words = [
@@ -15,11 +15,11 @@ bad_words = [
 bad_words_re_pattern = re.compile("|".join(bad_words), re.IGNORECASE)
 
 
-def check_article_title_for_bad_words(article_page: ArticlePage):
-    for article in article_page.articles:
-        title_bad_words = re.findall(bad_words_re_pattern, article.title)
+def check_article_title_for_bad_words(article_records: list[ArticleRecord]) -> list[ArticleRecord]:
+    for article in article_records:
+        title_bad_words = re.findall(bad_words_re_pattern, article.original_title)
         if title_bad_words:
             article.set_title_bad_words(title_bad_words)
     
-    return article_page
+    return article_records
             

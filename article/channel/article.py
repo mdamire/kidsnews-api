@@ -1,5 +1,6 @@
 import re
-import uuid
+
+from article.models import ArticleRecord
 
 
 def _is_url(url):
@@ -12,7 +13,7 @@ def _is_url(url):
 class Article():
     def __init__(
         self, author, published_at, title, content, response, description=None, 
-        url=None, image_url=None, title_bad_words=[]
+        url=None, image_url=None
     ):
         self.author = author
         self.published_at = published_at
@@ -20,13 +21,6 @@ class Article():
         self.content = content
         self.response = response
         self.description = description
-
-        self.title_bad_words = title_bad_words
-        self.has_bad_words = False
-
-        self.modified_title = None
-        self.modified_content = None
-        self.modified_description = None
 
         if url and _is_url(url):
             self.url = url
@@ -37,10 +31,6 @@ class Article():
             self.image_url = image_url
         else:
             self.image_url = None
-    
-    def set_title_bad_words(self, bad_words: list):
-        self.title_bad_words = bad_words
-        self.has_bad_words = True
 
 
 class ArticlePage():
@@ -48,3 +38,21 @@ class ArticlePage():
         self.page_number = page_number
         self.channel_name = channel
         self.articles = articles
+    
+    async def abulk_create(self):
+        record_objs = [
+            ArticleRecord(
+                author=article.author,
+                published_at=article.published_at,
+                original_title=article.title,
+                original_description=article.description,
+                original_content=article.content,
+                url=article.url,
+                image_url=article.image_url,
+                channel_name=self.channel_name,
+                channel_response=article.response
+            )
+            for article in self.articles
+        ]
+
+        return await ArticleRecord.objects.abulk_create(record_objs)

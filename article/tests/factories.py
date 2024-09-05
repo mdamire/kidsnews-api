@@ -1,8 +1,11 @@
 import random
 from datetime import datetime, timedelta
 from django.utils import timezone
+import factory
+from factory.django import DjangoModelFactory
 
-from article.article import Article, ArticlePage
+from article.models import ArticleRecord
+from article.channel.article import Article, ArticlePage
 
 
 def random_string(length=10):
@@ -111,3 +114,21 @@ def make_article_page(article_num, page_number):
         channel='test',
         articles=[make_article(i) for i in range(1, article_num+1) ]
     )
+
+
+class ArticleRecordFactory(DjangoModelFactory):
+    class Meta:
+        model = ArticleRecord
+
+    author = factory.Faker('name')
+    published_at = factory.LazyFunction(timezone.now)
+
+    original_title = factory.Faker('sentence')
+    original_content = factory.Faker('paragraph')
+
+    channel_name = factory.Faker('word')
+    channel_response = factory.Faker('json')
+
+    has_bad_words = False
+
+    has_rewritten = False

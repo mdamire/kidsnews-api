@@ -46,6 +46,6 @@ class NewsApiClient:
                         )
                     data = await response.json()
         except Exception as exc:
-            raise NewsApiClientError(f"Could not request everything: {str(exc)}")
+            raise NewsApiClientError(f"Could not request everything: {str(exc)}") from exc
         
         return data

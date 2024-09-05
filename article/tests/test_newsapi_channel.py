@@ -6,7 +6,8 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from article.channel.newsapi import handlers
-from article.article import ArticlePage
+from article.channel.article import ArticlePage
+from article.models import ArticleRecord
 from . import factories
 
 
@@ -27,3 +28,7 @@ class TestChannelHandlers(TestCase):
             self.assertEqual(len(article_pages), 6)
             for i in article_pages:
                 self.assertIsInstance(i, ArticlePage)
+
+        # create the database
+        asyncio.run(article_pages[0].abulk_create())
+        self.assertEqual(ArticleRecord.objects.all().count(), 100)

@@ -6,7 +6,7 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 
-from article.article import ArticlePage, Article
+from ..article import ArticlePage, Article
 from .client import NewsApiClient
 
 

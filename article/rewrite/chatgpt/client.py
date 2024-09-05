@@ -18,8 +18,17 @@ async def send_request_to_chatgpt(prompt):
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 150
     }
-
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=data) as response:
-            response_json = await response.json()
-            return response_json
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, headers=headers, json=data) as response:
+                if response.status != 200:
+                    raise ChatGptClientError(
+                        f"Failed to fetch data, status code: {response.status}"
+                    )
+                
+                response_json = await response.json()
+                return response_json
+    
+    except Exception as exc:
+        raise ChatGptClientError("Could not request to chat gpt") from exc
