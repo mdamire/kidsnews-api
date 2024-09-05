@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - postgres-net
+    
+  rabbitmq:
+    image: rabbitmq:3
+    networks:
+      - rabbitmq-net
+    
+  app-celery-beat:
+    build:
+      context: .
+      dockerfile: ./Dockerfiles/Dockerfile.all
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - postgres-net
+      - rabbitmq-net
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672
+      - DB_NAME=appdb
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: celery -A kidsnews beat -l info
+  
+  app:
+    build: .
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - postgres-net
+      - rabbitmq-net
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672
+      - DB_NAME=appdb
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    volumes:
+      - ./:/app
+    working_dir: /app
+    ports:
+      - 8000:8000
+    command: sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
+
+
+networks:
+  redis-net:
+  postgres-net:
+  rabbitmq-net:
+
+volumes:
+  pgdata:
+    driver: local
