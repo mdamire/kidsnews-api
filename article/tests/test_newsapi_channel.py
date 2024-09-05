@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from article.channel.newsapi import handlers
-from article.channel.article import ArticlePage
+from article.article import ArticlePage
 from . import factories
 
 

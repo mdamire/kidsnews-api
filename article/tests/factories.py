@@ -1,6 +1,8 @@
 import random
-from unittest.mock import AsyncMock
 from datetime import datetime, timedelta
+from django.utils import timezone
+
+from article.article import Article, ArticlePage
 
 
 def random_string(length=10):
@@ -12,7 +14,17 @@ def random_string(length=10):
     )
 
 
-class NewsAPIResponseFactory():
+class AsyncResponseFactory():
+    async def __aenter__(self):
+        # This method will be used in the async context manager
+        return self
+    
+    async def __aexit__(self, exc_type, exc, tb):
+        # important to mock asyncio context
+        pass
+
+
+class NewsAPIResponseFactory(AsyncResponseFactory):
     def __init__(self, total_result, article_number=100, status=200):
         self.total_result = total_result
         self.article_number = article_number
@@ -48,13 +60,54 @@ class NewsAPIResponseFactory():
     
     async def json(self):
         return self._generate_dummy_newsapi_response()
-    
-    async def __aenter__(self):
-        # This method will be used in the async context manager
-        return self
-    
-    async def __aexit__(self, exc_type, exc, tb):
-        # important to mock asyncio context
-        pass
 
 
+class ChatGptResponseFactory(AsyncResponseFactory):
+    def __init__(self, article_num, status=200) -> None:
+        self.article_num = article_num
+        self.status = 200
+    
+    def _single_dummy_response(self, id):
+        rs = f"ID: {id}\n"
+        rs += f"Title: {random_string(20)}\n"
+        rs += f"Description: {random_string(20)}\n"
+        rs += f"Content: {random_string(100)}\n\n"
+        return rs
+    
+    def _generate_dummy_response(self):
+        ct = ''
+        for i in range(self.article_num):
+            ct += self._single_dummy_response(i)
+        
+        response = {
+            'choices': [
+                {
+                    'message': {
+                        'content': ct
+                    }
+                }
+            ]
+        }
+
+        return response
+    
+    async def json(self):
+        return self._generate_dummy_response()
+
+
+def make_article(serial=1):
+    return Article(
+        author=f'test author {serial}',
+        published_at=timezone.now() - timedelta(days=3),
+        title=f'test title {serial}',
+        content=f'test content {serial}',
+        response={f'test response {serial}'},
+        description=f'test description {serial}',
+    )
+
+def make_article_page(article_num, page_number):
+    return ArticlePage(
+        page_number=page_number,
+        channel='test',
+        articles=[make_article(i) for i in range(1, article_num+1) ]
+    )
