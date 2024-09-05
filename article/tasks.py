@@ -27,6 +27,8 @@ async def save_rewrite_save(article_page: ArticlePage):
     # save contents
     await article_record_abulk_update(article_objs)
 
+    return len(article_objs)
+
 
 async def async_featch_and_rewrite_news_articles(date_from, date_to):
     # fetch data from channel
@@ -36,12 +38,20 @@ async def async_featch_and_rewrite_news_articles(date_from, date_to):
         save_rewrite_save(article_page)
         for article_page in article_pages
     ]
-    await asyncio.gather(*coro_tasks)
+    results = await asyncio.gather(*coro_tasks)
+
+    count = 0
+    for r in results:
+        count += r
+    
+    return count
 
 
 def featch_and_rewrite_news_articles(date_from, date_to):
     # keep a single async event loop
-    asyncio.run(async_featch_and_rewrite_news_articles(date_from, date_to))
+    count = asyncio.run(async_featch_and_rewrite_news_articles(date_from, date_to))
+    
+    return count
 
 
 def scheduled_featch_and_rewrite_news_articles(hours):

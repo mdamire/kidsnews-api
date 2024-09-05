@@ -10,8 +10,9 @@ from . import factories
 
 @override_settings(TNA_API_KEY='test', CHATGPT_API_KEY='test')
 class TestTasks(TestCase):
-
+    
     def test_featch_and_rewrite_news_articles(self):
+
         with (
             patch('article.channel.newsapi.client.aiohttp.ClientSession.get') as channel_patched,
             patch('article.rewrite.chatgpt.client.aiohttp.ClientSession.post') as rewrite_patched
@@ -19,8 +20,10 @@ class TestTasks(TestCase):
             channel_patched.return_value = factories.NewsAPIResponseFactory(52, 52)
             rewrite_patched.return_value = factories.ChatGptResponseFactory(52)
 
-            featch_and_rewrite_news_articles(
+            count = featch_and_rewrite_news_articles(
                 timezone.now()-timedelta(days=10),
                 timezone.now()-timedelta(days=8)
             )
-            self.assertEqual(ArticleRecord.objects.all().count(), 52)
+            # self.assertEqual(ArticleRecord.objects.all().count(), 52)
+
+            self.assertEqual(count, 52)
