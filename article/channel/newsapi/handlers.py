@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 import asyncio
 
+import pytz
 from django.conf import settings
 from django.utils import timezone
 
@@ -19,7 +20,7 @@ def parse_article_page_from_newsapi_response(response, page) -> ArticlePage:
             author=ra['author'],
             published_at=timezone.make_aware(
                 datetime.strptime(ra['publishedAt'], "%Y-%m-%dT%H:%M:%SZ"),
-                timezone.utc
+                pytz.utc
             ),
             title=ra['title'],
             content=ra['content'],
@@ -48,7 +49,8 @@ async def fetch_newsapi_article_page(date_from, date_to, page) -> ArticlePage:
     articale_page = await event_loop.run_in_executor(
         None, 
         parse_article_page_from_newsapi_response,
-        response
+        response,
+        page
     )
 
     if page == 1:
@@ -64,11 +66,18 @@ async def async_get_article_pages(date_from, date_to) -> list[ArticlePage]:
         1
     )
 
-    tasks = [
-        fetch_newsapi_article_page(date_from, date_to, page)
-        for page in range(2, (total_results // settings.TNA_PAGE_SIZE) + 2)
-    ]
+    if total_results > settings.TNA_PAGE_SIZE:
+        range_end = total_results // settings.TNA_PAGE_SIZE + 1
+        range_end = range_end + 1 if total_results % settings.TNA_PAGE_SIZE else range_end
 
-    article_pages = await asyncio.gather(*tasks)
+        tasks = [
+            fetch_newsapi_article_page(date_from, date_to, page)
+            for page in range(2, range_end)
+        ]
+
+        article_pages = await asyncio.gather(*tasks)
+        
+    else:
+        article_pages = []
 
     return [article_page_1] + article_pages

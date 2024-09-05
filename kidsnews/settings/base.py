@@ -16,7 +16,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-def get_secret(secret, default):
+def get_secret(secret, default=None):
     return os.getenv(secret, default)
 
 # Quick-start development settings - unsuitable for production
@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'rest_framework', 
     'django_filters',
 
-    'news',
+    'article',
 ]
 
 MIDDLEWARE = [
