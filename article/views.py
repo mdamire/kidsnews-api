@@ -11,7 +11,7 @@ class ArticleRecordFilter(filters.FilterSet):
 
     class Meta:
         model = ArticleRecord
-        fields = ['published_at', 'published_at_gte', 'published_at_lte']
+        fields = ['author', 'published_at']
 
 
 class ArticleRecordListView(ListAPIView):
