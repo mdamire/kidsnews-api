@@ -1,43 +1,44 @@
-from article.models import ArticleRecord
+import logging
+
+from article.models import ArticleRecord, ModifiedArticleRecord
 from .client import send_request_to_chatgpt
 
 
-async def rewrite_articles_for_kids(article_records: list[ArticleRecord]) -> list[ArticleRecord]:
-    # Construct the prompt for ChatGPT
-    prompt = "Rewrite the following articles for kids in simple language. Maintain the ID for each article:\n\n"
+_log = logging.getLogger(__name__)
+
+
+def rewrite_article_for_kids(article: ArticleRecord) -> ModifiedArticleRecord:
+    modified_record = ModifiedArticleRecord(id=article.id)
     
-    for idx, article in enumerate(article_records):
-        # skip article with bad words
-        if article.has_bad_words:
-            continue
-        
-        prompt += f"ID: {idx}\n"
-        prompt += f"Title: {article.original_title}\n"
-        prompt += f"Description: {article.original_description}\n"
-        prompt += f"Content: {article.original_content}\n\n"
+    # Skip article with bad words
+    if article.title_bad_words:
+        _log.info(f'Skipping rewrite. article id: {article.id} for bad words')
+        return
     
-    # Send the request to ChatGPT
-    response_dict = await send_request_to_chatgpt(prompt)
+    # Construct the prompt for ChatGPT for a single article
+    prompt = (
+        "Rewrite the following article for kids in simple language:\n\n"
+        f"Title: {article.original_title}\n"
+        f"Description: {article.original_description}\n"
+        f"Content: {article.original_content}\n\n"
+    )
+
+    # Send the request to ChatGPT for the single article
+    response_dict = send_request_to_chatgpt(prompt)
     response = response_dict['choices'][0]['message']['content']
-    
-    # Split the response into sections for each article
-    rewritten_sections = response.split("\n\n")
 
-    for rewritten_section in rewritten_sections:
-        if not rewritten_section:
-            continue
-        
-        lines = rewritten_section.split("\n")
-        
-        # Extract rewritten ID, title, description, and content from the response
-        rw_id = int(lines[0].replace("ID: ", "").strip())
-        rw_title = lines[1].replace("Title: ", "").strip()
-        rw_description = lines[2].replace("Description: ", "").strip()
-        rw_content = "\n".join(lines[3:]).replace("Content: ", "").strip()
+    # Split the response into lines for the single article
+    lines = response.split("\n")
 
-        article_records[rw_id].modified_title = rw_title
-        article_records[rw_id].modified_content = rw_content
-        article_records[rw_id].modified_description = rw_description
-        article_records[rw_id].has_rewritten = True
-        
-    return article_records
+    # Extract rewritten title, description, and content from the response
+    rw_title = lines[0].replace("Title: ", "").strip()
+    rw_description = lines[1].replace("Description: ", "").strip()
+    rw_content = "\n".join(lines[2:]).replace("Content: ", "").strip()
+
+    # Update the article record with the rewritten content
+    modified_record.title = rw_title
+    modified_record.content = rw_content
+    modified_record.description = rw_description
+    modified_record.save()
+
+    return modified_record

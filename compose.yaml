@@ -46,6 +46,7 @@ services:
       - postgres-net
       - rabbitmq-net
     environment:
+      - DJANGO_SETTINGS_MODULE=kidsnews.settings.production
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672
       - DB_NAME=appdb
       - DB_USER=user

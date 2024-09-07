@@ -5,21 +5,39 @@ from django.db import models
 from model_utils.models import TimeStampedModel
 
 
-class ArticleRecord(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    reference = models.UUIDField(unique=True)
+class NewsSource(models.Model):
+    id = models.CharField(max_length=100, primary_key=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    url = models.URLField(max_length=500)
+    category = models.CharField(max_length=100)
+    language = models.CharField(max_length=10)
+    country = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.name
+
+
+class NewsApiFetchLog(TimeStampedModel):
+    date_from = models.DateTimeField()
+    date_to = models.DateTimeField()
+
+    source = models.ForeignKey(NewsSource, on_delete=models.CASCADE)
+
+    success = models.BooleanField(default=False)
+    exception = models.TextField(blank=True, null=True)
+
+
+class ArticleRecord(TimeStampedModel):
+    id = models.CharField(max_length=64, primary_key=True)
+    source = models.ForeignKey(NewsSource, on_delete=models.CASCADE)
 
     author = models.CharField(max_length=500)
     published_at = models.DateTimeField()
 
-    original_title = models.TextField()
-    modified_title = models.TextField(blank=True, null=True)
-
-    original_description = models.TextField(blank=True, null=True)
-    modified_description = models.TextField(blank=True, null=True)
-
-    original_content = models.TextField()
-    modified_content = models.TextField(blank=True, null=True)
+    title = models.TextField()
+    content = models.TextField()
+    description = models.TextField(blank=True, null=True)
 
     channel_name = models.CharField(max_length=64)
     channel_response = models.JSONField()
@@ -27,17 +45,19 @@ class ArticleRecord(models.Model):
     url = models.URLField(blank=True, null=True)
     image_url = models.URLField(blank=True, null=True)
 
-    title_bad_words = models.CharField(max_length=200, blank=True, null=True)
-    has_bad_words = models.BooleanField(default=False)
-
-    has_rewritten = models.BooleanField(default=False)
+    title_bad_words = models.CharField(max_length=250, blank=True, null=True)
 
     class Meta:
         ordering = ['-published_at']
     
-    def set_title_bad_words(self, bad_words: list[str]):
-        self.title_bad_words = ','.join(bad_words)
-        self.has_bad_words = True
-
     def __str__(self):
-        return self.modified_title or self.original_title
+        return self.title
+
+
+class ModifiedArticleRecord(TimeStampedModel):
+    original = models.OneToOneField(ArticleRecord, on_delete=models.CASCADE, related_name='modified_record')
+
+    title = models.TextField()
+    content = models.TextField()
+    description = models.TextField(blank=True, null=True)
+

@@ -1,61 +1,49 @@
 import logging
-import asyncio
-from datetime import datetime
+from kidsnews.celery import app
 
-from django.utils import timezone
-
-from .channel.newsapi.handlers import async_get_article_pages
-from .channel.article import ArticlePage
-from .auditors import check_article_title_for_bad_words
-from .repository import article_record_abulk_update
-from .rewrite.chatgpt.handlers import rewrite_articles_for_kids
+from .rewrite.handlers import rewrite_articles
+from .repository import save_article_pages
+from .channel.handlers import fetch_article_pages
+from . import utils
 
 
 _log = logging.getLogger(__name__)
 
 
-async def save_rewrite_save(article_page: ArticlePage):
-    # save featched data
-    article_objs = await article_page.abulk_create()
+@app.task
+def fetch_and_rewrite_news_articles(date_from, date_to, countries):
+    for article_pages in fetch_article_pages(date_from, date_to, countries):
+        if not article_pages:
+            continue
+            
+        article_records = save_article_pages(article_pages)
+        _log.info(f"article_records created: {len(article_records)}")
 
-    # audit for words
-    article_objs = check_article_title_for_bad_words(article_objs)
-
-    # rewrite contents
-    article_objs = await rewrite_articles_for_kids(article_objs)
+        modified_records = rewrite_articles(article_records)
+        _log.info(f"modified records created: {len(modified_records)}")
     
-    # save contents
-    await article_record_abulk_update(article_objs)
+    return len(modified_records)
 
-    return len(article_objs)
-
-
-async def async_featch_and_rewrite_news_articles(date_from, date_to):
-    # fetch data from channel
-    article_pages = await async_get_article_pages(date_from, date_to)
-
-    coro_tasks = [
-        save_rewrite_save(article_page)
-        for article_page in article_pages
-    ]
-    results = await asyncio.gather(*coro_tasks)
-
-    count = 0
-    for r in results:
-        count += r
-    
-    return count
+                
 
 
-def featch_and_rewrite_news_articles(date_from, date_to):
-    # keep a single async event loop
-    count = asyncio.run(async_featch_and_rewrite_news_articles(date_from, date_to))
-    
-    return count
+def process_daily_news_articles(date_from, date_to, countries=['ca']):
+    _log.info(f"--- Starting article processing from {date_from} to {date_to} ---")
 
+    task_results = []  # To store async task results
 
-def scheduled_featch_and_rewrite_news_articles(hours):
-    date_from = timezone.now() - datetime(hour=hours)
-    date_to = timezone.now()
+    for df, dt in utils.split_into_days(date_from, date_to):
+        task = fetch_and_rewrite_news_articles.delay(df, dt, countries)
+        task_results.append(task)
 
-    featch_and_rewrite_news_articles(date_from, date_to)
+    _log.info(f"--- Finished queuing article processing tasks from {date_from} to {date_to} ---")
+
+    total_modified_records = 0
+    for task in task_results:
+        result = task.get()  
+        total_modified_records += result
+
+    _log.info(f"--- Total modified records: {total_modified_records} ---")
+
+    return total_modified_records
+

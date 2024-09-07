@@ -15,13 +15,17 @@ class ArticleRecordFilter(filters.FilterSet):
 
 
 class ArticleRecordListView(ListAPIView):
-    queryset = ArticleRecord.objects.filter(has_rewritten=True)
+    queryset = ArticleRecord.objects.filter(
+        modified_record__isnull=False
+    ).select_related('modified_record')
     serializer_class = ArticleRecordSerializer
     filterset_class = ArticleRecordFilter
-    search_fields = ('modified_title',)
+    search_fields = ('modified_record__title',)
 
 
 class ArticleRecordDetailView(RetrieveAPIView):
-    queryset = ArticleRecord.objects.filter(has_rewritten=True)
+    queryset = ArticleRecord.objects.filter(
+        modified_record__isnull=False
+    ).select_related('modified_record')
     serializer_class = ArticleRecordSerializer
     lookup_field = 'id'

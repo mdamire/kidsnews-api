@@ -25,8 +25,8 @@ class Command(BaseCommand):
 
         # Convert date strings to date objects
         try:
-            date_from = datetime.datetime.strptime(date_from_str, '%Y-%m-%d').date()
-            date_to = datetime.datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            date_from = datetime.datetime.strptime(date_from_str, '%Y-%m-%d')
+            date_to = datetime.datetime.strptime(date_to_str, '%Y-%m-%d')
         except ValueError:
             raise CommandError('Dates must be in the format YYYY-MM-DD')
 

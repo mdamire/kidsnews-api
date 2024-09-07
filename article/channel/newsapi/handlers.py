@@ -6,7 +6,7 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 
-from article.repository import create_newsapi_fetch_log
+from article.repository import create_newsapi_fetch_log, get_or_create_news_source
 from ..article import ArticlePage, Article
 from .client import NewsApiClient
 from .utils import get_unfetched_time_ranges
@@ -44,29 +44,32 @@ def parse_article_page_from_newsapi_response(response: dict, page: int, source_i
     return article_page
 
 
-def fetch_source_article_page(date_from, date_to, source) -> ArticlePage:
-    response = news_client.get_everything(date_from, date_to, source, page=1)
-    article_page = parse_article_page_from_newsapi_response(response, 1, source)
+def fetch_source_article_page(date_from, date_to, source_id) -> ArticlePage:
+    # Create page for first response
+    response = news_client.get_everything(date_from, date_to, source_id, page=1)
+    article_page = parse_article_page_from_newsapi_response(response, 1, source_id)
     yield article_page
 
+    # create respone for other responses
     total_results = response['totalResults']
     if total_results > settings.TNA_PAGE_SIZE:
         range_end = total_results // settings.TNA_PAGE_SIZE + 1
         range_end = range_end + 1 if total_results % settings.TNA_PAGE_SIZE else range_end
 
         for page in range(2, range_end):
-            response = news_client.get_everything(date_from, date_to, source, page=page)
-            article_page = parse_article_page_from_newsapi_response(response, page, source)
+            response = news_client.get_everything(date_from, date_to, source_id, page=page)
+            article_page = parse_article_page_from_newsapi_response(response, page, source_id)
             yield article_page
 
 
 
 def fetch_article_pages(date_from: datetime, date_to: datetime, countries: list) -> list[ArticlePage]:
-    source_data = news_client.get_sources(countries)
+    source_response_data = news_client.get_sources(countries)
 
     # check article for each source
-    for source in source_data['sources']:
-        source_id = source['id']
+    for source_data in source_response_data['sources']:
+        source_id = get_or_create_news_source(**source_data).id
+
         source_pages = []
 
         # create a unfetched time range
@@ -86,7 +89,7 @@ def fetch_article_pages(date_from: datetime, date_to: datetime, countries: list)
             )
 
             try:
-                source_pages += list(fetch_source_article_page(udf, udt, source['id']))
+                source_pages += list(fetch_source_article_page(udf, udt, source_id))
             except Exception as exc:
                 _log.exception(exc)
                 fetch_log.exception = traceback.format_exc()

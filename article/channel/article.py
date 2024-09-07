@@ -1,5 +1,4 @@
 import re
-import hashlib
 
 
 def _is_url(url):

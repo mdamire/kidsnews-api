@@ -1,10 +1,10 @@
-import aiohttp
+import requests
 from django.conf import settings
 
 from .exceptions import ChatGptClientError
 
 
-async def send_request_to_chatgpt(prompt):
+def send_request_to_chatgpt(prompt):
     if not settings.CHATGPT_API_KEY:
         raise ChatGptClientError('CHATGPT_API_KEY missing in settings')
     
@@ -20,15 +20,17 @@ async def send_request_to_chatgpt(prompt):
     }
     
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, json=data) as response:
-                if response.status != 200:
-                    raise ChatGptClientError(
-                        f"Failed to fetch data, status code: {response.status}"
-                    )
-                
-                response_json = await response.json()
-                return response_json
+        response = requests.post(url, headers=headers, json=data)
+        
+        if response.status_code != 200:
+            raise ChatGptClientError(
+                f"reques failed.",
+                status_code=response.status_code,
+                text=response.text
+            )
+        
+        response_json = response.json()
+        return response_json
     
     except Exception as exc:
         raise ChatGptClientError("Could not request to chat gpt") from exc
