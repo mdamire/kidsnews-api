@@ -1,20 +1,22 @@
 import logging
 from datetime import datetime
-import asyncio
+import traceback
 
 import pytz
 from django.conf import settings
 from django.utils import timezone
 
+from article.repository import create_newsapi_fetch_log
 from ..article import ArticlePage, Article
 from .client import NewsApiClient
+from .utils import get_unfetched_time_ranges
 
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 news_client = NewsApiClient()
 
 
-def parse_article_page_from_newsapi_response(response, page) -> ArticlePage:
+def parse_article_page_from_newsapi_response(response: dict, page: int, source_id: str) -> ArticlePage:
     articles = [
         Article(
             author=ra['author'],
@@ -35,49 +37,65 @@ def parse_article_page_from_newsapi_response(response, page) -> ArticlePage:
     article_page = ArticlePage(
         page_number=page,
         channel='news-api',
-        articles=articles
+        articles=articles,
+        source_id=source_id
     )
 
     return article_page
 
 
-async def fetch_newsapi_article_page(date_from, date_to, page) -> ArticlePage:
-    response = await news_client.aget_everything(date_from, date_to, page=page)
+def fetch_source_article_page(date_from, date_to, source) -> ArticlePage:
+    response = news_client.get_everything(date_from, date_to, source, page=1)
+    article_page = parse_article_page_from_newsapi_response(response, 1, source)
+    yield article_page
 
-    # parse in non-blocking way
-    event_loop = asyncio.get_event_loop()
-    articale_page = await event_loop.run_in_executor(
-        None, 
-        parse_article_page_from_newsapi_response,
-        response,
-        page
-    )
-
-    if page == 1:
-        return (response['totalResults'], articale_page)
-    
-    return articale_page
-
-
-async def async_get_article_pages(date_from, date_to) -> list[ArticlePage]:
-    total_results, article_page_1 = await fetch_newsapi_article_page(
-        date_from, 
-        date_to, 
-        1
-    )
-
+    total_results = response['totalResults']
     if total_results > settings.TNA_PAGE_SIZE:
         range_end = total_results // settings.TNA_PAGE_SIZE + 1
         range_end = range_end + 1 if total_results % settings.TNA_PAGE_SIZE else range_end
 
-        tasks = [
-            fetch_newsapi_article_page(date_from, date_to, page)
-            for page in range(2, range_end)
-        ]
+        for page in range(2, range_end):
+            response = news_client.get_everything(date_from, date_to, source, page=page)
+            article_page = parse_article_page_from_newsapi_response(response, page, source)
+            yield article_page
 
-        article_pages = await asyncio.gather(*tasks)
 
-    else:
-        article_pages = []
 
-    return [article_page_1] + article_pages
+def fetch_article_pages(date_from: datetime, date_to: datetime, countries: list) -> list[ArticlePage]:
+    source_data = news_client.get_sources(countries)
+
+    # check article for each source
+    for source in source_data['sources']:
+        source_id = source['id']
+        source_pages = []
+
+        # create a unfetched time range
+        unfetched_time_ranges = get_unfetched_time_ranges(date_from, date_to, source_id)
+        if not unfetched_time_ranges:
+            _log.info(f'Fetched news api data before. date_from:{date_from} date_to:{date_to}, source: {source_id}')
+            return
+        
+        # fetch article pages for that time range
+        for udf, udt in unfetched_time_ranges:
+            _log.info(f'Feching news api data for date_from:{udf} date_to:{udt}, source:{source_id}')
+
+            fetch_log = create_newsapi_fetch_log(
+                date_from=udf,
+                date_to=udt,
+                source_id=source_id,
+            )
+
+            try:
+                source_pages += list(fetch_source_article_page(udf, udt, source['id']))
+            except Exception as exc:
+                _log.exception(exc)
+                fetch_log.exception = traceback.format_exc()
+            else:
+                fetch_log.success = True
+            finally:
+                fetch_log.save()
+        
+        _log.info(f'Feching news api data complete for source: {source_id}')
+
+        yield source_pages
+    

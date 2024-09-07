@@ -1,0 +1,3 @@
+
+class NewChannels:
+    NEWSAPI = 'newsapi'
