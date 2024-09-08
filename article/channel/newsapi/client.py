@@ -8,9 +8,9 @@ from .exceptions import NewsApiClientError
 
 class NewsApiClient:
 
-    def __init__(self, api_key, lang=['en']):
+    def __init__(self, lang=['en']):
         self.lang = lang
-        self.api_key = api_key
+        self.api_key = settings.TNA_API_KEY
     
     def _send_request(self, url: str, params: dict):
         headers = {
@@ -55,7 +55,7 @@ class NewsApiClient:
         return self._send_request(url, params)
     
     def get_sources(self, countries: list[str]):
-        url = 'https://newsapi.org/v2/everything'
+        url = 'https://newsapi.org/v2/top-headlines/sources'
         params = {
             'language': ','.join(self.lang),
             'country': ','.join(countries)

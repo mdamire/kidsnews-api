@@ -69,6 +69,7 @@ def fetch_article_pages(date_from: datetime, date_to: datetime, countries: list)
     # check article for each source
     for source_data in source_response_data['sources']:
         source_id = get_or_create_news_source(**source_data).id
+        _log.info(f'Featiching for source: {source_id}')
 
         source_pages = []
 
