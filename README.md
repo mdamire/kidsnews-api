@@ -43,7 +43,7 @@ To make sure the this functionality work add `TNA_API_KEY` and `CHATGPT_API_KEY`
 
 Fetch a data manually between a time period:
 ```bash
-docker compose run app python manage.py fetch_articles '2024-09-01' '2024-09-02'
+python manage.py fetch_articles '2024-09-01' '2024-09-02'
 ```
 If it's called with a duplicated date range, it will find a date range that was not used before within the date range and will fetch data for newly created date range.
 
