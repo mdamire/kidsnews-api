@@ -221,7 +221,7 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 CELERY_BEAT_SCHEDULE = {
     'fetch-and-rewrite-news-every-6-hours': {
-        'task': 'article.tasks.scheduled_featch_and_rewrite_news_articles',
+        'task': 'article.tasks.process_latest_news_articles',
         'schedule': crontab(minute=0, hour='*/6'),  # Run every 6 hours
         'args': (6,),
     },

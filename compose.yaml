@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16
@@ -8,64 +10,105 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - postgres-net
-    
+      - app-net
+
   rabbitmq:
     image: rabbitmq:3
     networks:
-      - rabbitmq-net
-    
+      - app-net
+
   app-celery-beat:
-    build:
-      context: .
-      dockerfile: ./Dockerfiles/Dockerfile.all
-    depends_on:
-      - rabbitmq
-      - postgres
-    networks:
-      - postgres-net
-      - rabbitmq-net
-    environment:
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672
-      - DB_NAME=appdb
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_HOST=postgres
-      - DB_PORT=5432
-    volumes:
-      - ./:/app
-    working_dir: /app
-    command: celery -A kidsnews beat -l info
-  
-  app:
     build: .
     depends_on:
       - rabbitmq
       - postgres
     networks:
-      - postgres-net
-      - rabbitmq-net
+      - app-net
     environment:
-      - DJANGO_SETTINGS_MODULE=kidsnews.settings.production
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672
-      - DB_NAME=appdb
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_HOST=postgres
-      - DB_PORT=5432
+      - ${DJANGO_SETTINGS_MODULE}
+      - ${CELERY_BROKER_URL}
+      - ${DB_NAME}
+      - ${DB_USER}
+      - ${DB_PASSWORD}
+      - ${DB_HOST}
+      - ${DB_PORT}
+      - ${TNA_API_KEY}
+      - ${CHATGPT_API_KEY}
+      - ${NEWS_COUNTRIES}
+      - ${NEWS_LANGUAGES}
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: celery -A kidsnews beat -l info
+
+  app-celery-worker:
+    build: .
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - app-net
+    environment:
+      - ${DJANGO_SETTINGS_MODULE}
+      - ${CELERY_BROKER_URL}
+      - ${DB_NAME}
+      - ${DB_USER}
+      - ${DB_PASSWORD}
+      - ${DB_HOST}
+      - ${DB_PORT}
+      - ${TNA_API_KEY}
+      - ${CHATGPT_API_KEY}
+      - ${NEWS_COUNTRIES}
+      - ${NEWS_LANGUAGES}
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: celery -A kidsnews worker -l info
+
+  app:
+    build: .
+    depends_on:
+      - postgres
+      - rabbitmq
+      - app-celery-worker
+    networks:
+      - app-net
+    environment:
+      - ${DJANGO_SETTINGS_MODULE}
+      - ${CELERY_BROKER_URL}
+      - ${DB_NAME}
+      - ${DB_USER}
+      - ${DB_PASSWORD}
+      - ${DB_HOST}
+      - ${DB_PORT}
+      - ${TNA_API_KEY}
+      - ${CHATGPT_API_KEY}
+      - ${NEWS_COUNTRIES}
+      - ${NEWS_LANGUAGES}
     volumes:
       - ./:/app
     working_dir: /app
     ports:
       - 8000:8000
-    command: sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
-
+    command: >
+      sh -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
 
 networks:
-  redis-net:
-  postgres-net:
-  rabbitmq-net:
+  app-net:
 
 volumes:
   pgdata:
     driver: local
+
+x-common-environment:
+  DJANGO_SETTINGS_MODULE: kidsnews.settings.production
+  CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672
+  DB_NAME: appdb
+  DB_USER: user
+  DB_PASSWORD: password
+  DB_HOST: postgres
+  DB_PORT: 5432
+  TNA_API_KEY: <addhere>
+  CHATGPT_API_KEY: <addhere>
+  NEWS_COUNTRIES: 'ca,' # comma delimited values
+  NEWS_LANGUAGES: 'en,' # comma delimited values

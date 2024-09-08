@@ -1,3 +1,7 @@
+"""These are to intaract with database. 
+
+Easy place to include additional actions with database actions.
+"""
 import hashlib
 import logging
 

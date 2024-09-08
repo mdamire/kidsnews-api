@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from django.conf import settings
+from django.utils import timezone
 
 from kidsnews.celery import app
 from .rewrite.handlers import rewrite_articles
@@ -36,10 +37,12 @@ def fetch_and_rewrite_news_articles(
     return modified_count
 
 
-def process_daily_news_articles(
+def process_news_articles_by_time_period(
         date_from: datetime, date_to: datetime, 
         countries: list[str]=settings.NEWS_COUNTRIES, languages: list[str]=settings.NEWS_LANGUAGES
     ):
+    """it will split up 
+    """
     _log.info(f"--- Starting article processing from {date_from} to {date_to} ---")
 
     task_results = []  # To store async task results
@@ -53,9 +56,25 @@ def process_daily_news_articles(
     total_modified_records = 0
     for task in task_results:
         result = task.get()  
-        total_modified_records += result
+        total_modified_records += result if result and isinstance(result, int) else 0
 
     _log.info(f"--- Total modified records: {total_modified_records} ---")
 
     return total_modified_records
 
+
+@app.task
+def process_latest_news_articles(hours):
+    date_from = timezone.now() - timedelta(hours=hours)
+    date_to = timezone.now()
+
+    _log.info(f"--- Starting article processing from {date_from} to {date_to} ---")
+
+    count = fetch_and_rewrite_news_articles(
+        date_from, date_to, settings.NEWS_COUNTRIES, settings.NEWS_LANGUAGES
+    )
+
+    _log.info(f"--- Finished article processing ---")
+    _log.info(f"--- Total modified records: {count} ---")
+
+    return count
