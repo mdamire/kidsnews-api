@@ -34,13 +34,18 @@ Access the admin at http://localhost:8000/admin
 It grabs the the from [newsapi](https://newsapi.org/docs/endpoints/everything) and filters and recreates using chatgpt. 
 It uses both parallel and concurrent computing to fetch the create the data.
 
-To make sure the this functionality work add `TNA_API_KEY` and `CHATGPT_API_KEY` environemnt variables in `compose.yaml` file's app service configuration.
+It maintain a fetch log for per news channel that helps the featcher to not to request or save duplicated data.
+
+
+To make sure the this functionality work add `TNA_API_KEY` and `CHATGPT_API_KEY` environemnt variables in `.env` file.
 
 #### Mannual process
+
 Fetch a data manually between a time period:
 ```bash
-python manage.py fetch_articles --date-from '2024-1-1' --date-to '2024-2-1'
+docker compose run app python manage.py fetch_articles '2024-09-01' '2024-09-02'
 ```
+If it's called with a duplicated date range, it will find a date range that was not used before within the date range and will fetch data for newly created date range.
 
 #### Automated process
 There is a celery beat schedule that runs every 6 hours and generates last 6 hours news.
@@ -50,7 +55,7 @@ There is a celery beat schedule that runs every 6 hours and generates last 6 hou
 Create user by using superuser command or from admin. Use the user's username and password for basic http authentication.
 These endpoint has a ratelimit of 1000 requests per hour.
 
-#### GET - /articles
+#### GET - /api/articles
 - return list of articles
 - Filter keys:
     - author
@@ -59,5 +64,5 @@ These endpoint has a ratelimit of 1000 requests per hour.
     - published_at_lte
 - Can be searched via title
 
-#### GET - /article/{id}
+#### GET - /api/article/{id}
 - returns details of an article
