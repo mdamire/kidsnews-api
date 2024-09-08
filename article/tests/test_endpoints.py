@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from django.utils import timezone
@@ -11,25 +12,36 @@ from . import factories
 class TestEndpoints(APITestCase):
 
     def setUp(self) -> None:
+        logging.disable(logging.CRITICAL)
+
         self.user = User.objects.create_user(username='tu', password='tp')
         self.r1 = factories.ArticleRecordFactory(
             published_at=timezone.now() - timedelta(days=10),
-            modified_title='A common title',
-            has_rewritten=True
         )
+        self.mr1 = factories.ModifiedArticleRecordFactory(
+            article=self.r1,
+            title='A common title'
+        )
+
         self.r2 = factories.ArticleRecordFactory(
             published_at=timezone.now() - timedelta(days=8),
-            has_rewritten=True,
-            modified_title='test',
-            modified_description='md'
         )
+        self.mr2 = factories.ModifiedArticleRecordFactory(
+            article=self.r2,
+            title='test'
+        )
+
         self.r3 = factories.ArticleRecordFactory(
             published_at=timezone.now() - timedelta(days=6),
-            has_rewritten=True
         )
+        self.mr3 = factories.ModifiedArticleRecordFactory(
+            article=self.r3
+        )
+
         self.r4 = factories.ArticleRecordFactory(
             published_at=timezone.now() - timedelta(days=6),
         )
+
         self.client.login(username='tu', password='tp')
 
     def test_article_detail(self):
@@ -61,4 +73,4 @@ class TestEndpoints(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['id'], str(self.r2.id))
-        self.assertEqual(response.data['title'], self.r2.modified_title)
+        self.assertEqual(response.data['title'], self.r2.modified_record.title)

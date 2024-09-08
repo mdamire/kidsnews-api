@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import ArticleRecord
+from .models import ArticleRecord, ModifiedArticleRecord
 
 
 class ArticleRecordSerializer(serializers.ModelSerializer):
-    title = serializers.CharField(source='modified_title', read_only=True)
-    description = serializers.CharField(source='modified_description', read_only=True, allow_null=True)
-    content = serializers.CharField(source='modified_content', read_only=True)
+    title = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    content = serializers.SerializerMethodField()
 
     class Meta:
         model = ArticleRecord
@@ -20,3 +20,18 @@ class ArticleRecordSerializer(serializers.ModelSerializer):
             'url',
             'image_url'
         ]
+
+    def get_title(self, obj):
+        if hasattr(obj, 'modified_record'):
+            return obj.modified_record.title
+        return obj.title
+
+    def get_description(self, obj):
+        if hasattr(obj, 'modified_record'):
+            return obj.modified_record.description
+        return obj.description
+
+    def get_content(self, obj):
+        if hasattr(obj, 'modified_record'):
+            return obj.modified_record.content
+        return obj.content

@@ -17,10 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from article.views import ArticleRecordListView, ArticleRecordDetailView
+from article.views import (
+    ArticleRecordListView, ArticleRecordDetailView, article_list_view, article_detail_view
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('articles', ArticleRecordListView.as_view(), name='article-list'),
-    path('articles/<uuid:id>', ArticleRecordDetailView.as_view(), name='article-detail'),
+    
+    path('api/articles', ArticleRecordListView.as_view(), name='article-list'),
+    path('api/articles/<uuid:id>', ArticleRecordDetailView.as_view(), name='article-detail'),
+
+    path('articles/', article_list_view, name='article-list-http'),
+    path('articles/<uuid:id>/', article_detail_view, name='article-detail-http'),
 ]

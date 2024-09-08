@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
+import sys
 
 from pathlib import Path
 from celery.schedules import crontab
@@ -135,59 +136,40 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'django.server': {
-            '()': 'django.utils.log.ServerFormatter',
-            'format': '[%(server_time)s] %(message)s',
-        },
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
-    },
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
+            'format': '{levelname} {message}',
+            'style': '{',
         },
     },
     'handlers': {
-        'django.server': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'django.server',
-        },
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'simple',
         },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'propagate': True,
-        },
-        'django.server': {
-            'handlers': ['django.server'],
-            'level': 'INFO',
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['mail_admins', 'console'],
+            'handlers': ['console'],
             'level': 'ERROR',
             'propagate': False,
         },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'INFO'
-        },
-    }
+    },
 }
+
 
 # Django Rest Framework
 REST_FRAMEWORK = {
@@ -223,6 +205,9 @@ REST_FRAMEWORK = {
 TNA_API_KEY = get_secret('TNA_API_KEY')
 TNA_PAGE_SIZE = 100 # 100 max
 
+NEWS_COUNTRIES = get_secret('NEWS_COUNTRIES').split(',') if get_secret('NEWS_COUNTRIES') else ['ca']
+NEWS_LANGUAGES = get_secret('NEWS_LANGUAGES').split(',') if get_secret('NEWS_LANGUAGES') else ['en']
+
 
 # ChatGPT settings
 CHATGPT_API_KEY = get_secret('CHATGPT_API_KEY')
@@ -236,7 +221,7 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 CELERY_BEAT_SCHEDULE = {
     'fetch-and-rewrite-news-every-6-hours': {
-        'task': 'article.tasks.scheduled_featch_and_rewrite_news_articles',
+        'task': 'article.tasks.process_latest_news_articles',
         'schedule': crontab(minute=0, hour='*/6'),  # Run every 6 hours
         'args': (6,),
     },
