@@ -137,29 +137,29 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '{levelname} {message}',
+            'style': '{',
         },
     },
     'handlers': {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'stream': sys.stdout,
-            'formatter': 'simple'
+            'formatter': 'simple',
         },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',  
-            'propagate': False,
-        },
-        'django.server': {
-            'handlers': ['console'],
-            'level': 'INFO',
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': False,
         },
         'django.request': {
@@ -167,12 +167,7 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    }
+    },
 }
 
 
@@ -209,6 +204,9 @@ REST_FRAMEWORK = {
 # The news api client settings
 TNA_API_KEY = get_secret('TNA_API_KEY')
 TNA_PAGE_SIZE = 100 # 100 max
+
+NEWS_COUNTRIES = get_secret('NEWS_COUNTRIES').split(',') if get_secret('NEWS_COUNTRIES') else ['ca']
+NEWS_LANGUAGES = get_secret('NEWS_LANGUAGES').split(',') if get_secret('NEWS_LANGUAGES') else ['en']
 
 
 # ChatGPT settings

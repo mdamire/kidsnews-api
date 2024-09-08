@@ -13,7 +13,6 @@ from .utils import get_unfetched_time_ranges
 
 
 _log = logging.getLogger(__name__)
-news_client = NewsApiClient()
 
 
 def parse_article_page_from_newsapi_response(response: dict, page: int, source_id: str) -> ArticlePage:
@@ -44,7 +43,9 @@ def parse_article_page_from_newsapi_response(response: dict, page: int, source_i
     return article_page
 
 
-def fetch_source_article_page(date_from, date_to, source_id) -> ArticlePage:
+def fetch_source_article_page(date_from, date_to, source_id, languages) -> ArticlePage:
+    news_client = NewsApiClient(lang=languages)
+
     # Create page for first response
     response = news_client.get_everything(date_from, date_to, source_id, page=1)
     article_page = parse_article_page_from_newsapi_response(response, 1, source_id)
@@ -63,7 +64,10 @@ def fetch_source_article_page(date_from, date_to, source_id) -> ArticlePage:
 
 
 
-def fetch_article_pages(date_from: datetime, date_to: datetime, countries: list) -> list[ArticlePage]:
+def fetch_article_pages(
+        date_from: datetime, date_to: datetime, countries: list, languages: list
+    ) -> list[ArticlePage]:
+    news_client = NewsApiClient(lang=languages)
     source_response_data = news_client.get_sources(countries)
 
     # check article for each source
@@ -90,7 +94,7 @@ def fetch_article_pages(date_from: datetime, date_to: datetime, countries: list)
             )
 
             try:
-                source_pages += list(fetch_source_article_page(udf, udt, source_id))
+                source_pages += list(fetch_source_article_page(udf, udt, source_id, languages))
             except Exception as exc:
                 _log.exception(exc)
                 fetch_log.exception = traceback.format_exc()

@@ -49,13 +49,19 @@ class ArticleRecord(TimeStampedModel):
 
     class Meta:
         ordering = ['-published_at']
+        constraints = [
+            models.UniqueConstraint(fields=['source', 'title'], name='unique_source_title')
+        ]
     
     def __str__(self):
         return self.title
 
 
 class ModifiedArticleRecord(TimeStampedModel):
-    original = models.OneToOneField(ArticleRecord, on_delete=models.CASCADE, related_name='modified_record')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    article = models.OneToOneField(
+        ArticleRecord, on_delete=models.CASCADE, related_name='modified_record'
+    )
 
     title = models.TextField()
     content = models.TextField()

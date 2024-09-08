@@ -1,5 +1,6 @@
 from unittest.mock import patch, call
 from datetime import timedelta
+import logging
 
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -13,6 +14,8 @@ from . import factories
 
 @override_settings(TNA_API_KEY='test')
 class TestChannelHandlers(TestCase):
+    def setUp(self) -> None:
+        logging.disable(logging.CRITICAL)
 
     def test_fetch_article_pages_1_source(self):
         with (
@@ -25,7 +28,8 @@ class TestChannelHandlers(TestCase):
             article_pages_list = list(handlers.fetch_article_pages(
                 timezone.now() - timedelta(days=10),
                 timezone.now() - timedelta(days=8),
-                ['ca']
+                ['ca'],
+                ['en']
             ))
             
             self.assertEqual(len(article_pages_list), 1)
@@ -47,7 +51,8 @@ class TestChannelHandlers(TestCase):
             article_pages_list = list(handlers.fetch_article_pages(
                 timezone.now() - timedelta(days=10),
                 timezone.now() - timedelta(days=8),
-                ['ca']
+                ['ca'],
+                ['en']
             ))
             
             self.assertEqual(len(article_pages_list), 3)
@@ -75,10 +80,11 @@ class TestChannelHandlers(TestCase):
             article_pages_list = list(handlers.fetch_article_pages(
                 dt1,
                 timezone.now() - timedelta(days=8),
-                ['ca']
+                ['ca'],
+                ['en']
             ))
 
-            f_patched.assert_called_once_with(dt1, dt2, source.id)
+            f_patched.assert_called_once_with(dt1, dt2, source.id, ['en'])
     
     def test_already_fetched_dates_multiple_sections(self):
         dt1 = timezone.now() - timedelta(days=10)
@@ -105,14 +111,15 @@ class TestChannelHandlers(TestCase):
             article_pages_list = list(handlers.fetch_article_pages(
                 dt1,
                 dt4,
-                ['ca']
+                ['ca'],
+                ['en']
             ))
 
             self.assertEqual(
                 f_patched.call_args_list,
                 [
-                    call(dt1, dt2, source.id),
-                    call(dt3, dt4, source.id)
+                    call(dt1, dt2, source.id, ['en']),
+                    call(dt3, dt4, source.id, ['en'])
                 ]
             )
 

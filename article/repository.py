@@ -1,8 +1,10 @@
 import hashlib
 import logging
 
+from django.db import transaction
+
 from .channel.article import ArticlePage
-from .models import ArticleRecord, NewsApiFetchLog, NewsSource
+from .models import ArticleRecord, NewsApiFetchLog, NewsSource, ModifiedArticleRecord
 
 
 _log = logging.getLogger(__name__)
@@ -23,12 +25,14 @@ def get_or_create_news_source(id, name, description, url, category, language, co
 
     return news_source
 
+
 def save_article_pages(article_pages: list[ArticlePage]):
     total_record_objs = []
 
     for article_page in article_pages:
         record_objs = []
         for article in article_page.articles:
+            # Create the id to pass around the object
             id = hashlib.sha256(
                 f"{article.title.lower()}:{article_page.source_id.lower()}".encode('utf-8')
             ).hexdigest()
@@ -49,18 +53,24 @@ def save_article_pages(article_pages: list[ArticlePage]):
                 )
             )
         
-        ArticleRecord.objects.abulk_create(record_objs, ignore_conflicts=True)
+        ArticleRecord.objects.bulk_create(record_objs, ignore_conflicts=True)
         total_record_objs += record_objs
     
     return total_record_objs
 
 
-def create_modified_articles(article_records):
-    ...
+def bulk_create_or_update_modified_records(records: list[ModifiedArticleRecord]):
+    objs = []
+    with transaction.atomic():
+        objs = ModifiedArticleRecord.objects.bulk_create(
+            records,
+            update_conflicts=True,
+            update_fields=['title', 'content', 'description'],
+            unique_fields=['article'],
+            batch_size=150
+        )
 
-
-def get_news_api_fetch_log(source_id):
-    ...
+    return objs
 
 
 
