@@ -1,9 +1,13 @@
 import pytz
 from datetime import datetime
 import requests
+import logging
 
 from django.conf import settings
 from .exceptions import NewsApiClientError
+
+
+_log = logging.getLogger(__name__)
 
 
 class NewsApiClient:
@@ -13,6 +17,9 @@ class NewsApiClient:
         self.api_key = settings.TNA_API_KEY
     
     def _send_request(self, url: str, params: dict):
+        if not self.api_key:
+            raise NewsApiClientError("Set TNA_API_KEY in settings")
+        
         headers = {
             'X-Api-Key': self.api_key,
             'Content-Type': 'application/json'
@@ -26,11 +33,11 @@ class NewsApiClient:
                     status_code=response.status_code,
                     response_text=response.text
                 )
-            data = response.json()
+            
         except Exception as exc:
             raise NewsApiClientError(f"Could not request everything: {str(exc)}") from exc
         
-        return data
+        return response
 
     def get_everything(
             self, from_param: datetime, to: datetime, source: str,
@@ -52,7 +59,20 @@ class NewsApiClient:
             'sources': source
         }
 
-        return self._send_request(url, params)
+        response = self._send_request(url, params)
+        data = response.json()
+
+        if not 'articles' in data:
+            raise NewsApiClientError(
+                f'Articles not in response data for url: {response.request.url}',
+                status_code=response.status_code,
+                response_text=response.text
+            )
+        
+        if not data.get('articles'):
+            _log.warning(f'No article found for url: {response.request.url}. params: {params}')
+
+        return data
     
     def get_sources(self, countries: list[str]):
         url = 'https://newsapi.org/v2/top-headlines/sources'
@@ -61,5 +81,18 @@ class NewsApiClient:
             'country': ','.join(countries)
         }
 
-        return self._send_request(url, params)
+        response = self._send_request(url, params)
+        data = response.json()
+
+        if not 'sources' in data:
+            raise NewsApiClientError(
+                f'Sources not in response data for url: {response.request.url}. params: {params}',
+                status_code=response.status_code,
+                response_text=response.text
+            )
+
+        if not data.get('sources'):
+            _log.warning(f'No sources found for url: {response.request.url}')
+        
+        return data
         

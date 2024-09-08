@@ -70,6 +70,11 @@ def fetch_article_pages(
     news_client = NewsApiClient(lang=languages)
     source_response_data = news_client.get_sources(countries)
 
+    sources_ids = [s['id'] for s in source_response_data['sources']]
+    _log.info(
+        f'Newsapi fetch starting for: countries: {countries}, languages: {languages},  sources: {sources_ids}'
+    )
+
     # check article for each source
     for source_data in source_response_data['sources']:
         source_id = get_or_create_news_source(**source_data).id

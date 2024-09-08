@@ -14,7 +14,7 @@ def send_request_to_chatgpt(prompt):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "gpt-3.5-turbo",  # Replace with the desired model
+        "model": "gpt-3.5-turbo",
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 150
     }
@@ -24,9 +24,9 @@ def send_request_to_chatgpt(prompt):
         
         if response.status_code != 200:
             raise ChatGptClientError(
-                f"reques failed.",
+                f"request failed.",
                 status_code=response.status_code,
-                text=response.text
+                response_text=response.text
             )
         
         response_json = response.json()

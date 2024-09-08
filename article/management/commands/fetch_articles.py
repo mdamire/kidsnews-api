@@ -1,6 +1,8 @@
 import datetime
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
+from django.utils import timezone
+
 from article.tasks import process_news_articles_by_time_period
 
 class Command(BaseCommand):
@@ -8,24 +10,24 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--date-from',
+            'date_from',
             type=str,
-            help='Start date in the format YYYY-MM-DD',
-            required=True
+            help='Start date in the format YYYY-MM-DD'
         )
         parser.add_argument(
-            '--date-to',
+            'date_to',
             type=str,
-            help='End date in the format YYYY-MM-DD',
-            required=True
+            help='End date in the format YYYY-MM-DD'
         )
         parser.add_argument(
+            '-c',
             '--country',
             nargs='+',
             default=settings.NEWS_COUNTRIES,
             help='List of country codes. Default is ["ca"].'
         )
         parser.add_argument(
+            '-l',
             '--lang',
             nargs='+',
             default=settings.NEWS_LANGUAGES,
@@ -40,8 +42,14 @@ class Command(BaseCommand):
 
         # Convert date strings to date objects
         try:
-            date_from = datetime.datetime.strptime(date_from_str, '%Y-%m-%d')
-            date_to = datetime.datetime.strptime(date_to_str, '%Y-%m-%d')
+            date_from = timezone.make_aware(
+                datetime.datetime.strptime(date_from_str, '%Y-%m-%d'),
+                timezone.get_current_timezone()
+            )
+            date_to = timezone.make_aware(
+                datetime.datetime.strptime(date_to_str, '%Y-%m-%d'),
+                timezone.get_current_timezone()
+            )
             # Set date_to to the end of the day
             date_to = date_to.replace(hour=23, minute=59, second=59, microsecond=999999)
         except ValueError:

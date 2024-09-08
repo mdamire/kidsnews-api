@@ -45,7 +45,7 @@ def article_list_view(request):
         'filterset': filterset,
         'articles': filterset.qs  # Filtered queryset
     }
-    return render(request, 'article_list.html', context)
+    return render(request, 'article/article_list.html', context)
 
 
 def article_detail_view(request, id):
@@ -54,4 +54,4 @@ def article_detail_view(request, id):
     context = {
         'article': article
     }
-    return render(request, 'article_detail.html', context)
+    return render(request, 'article/article_detail.html', context)

@@ -41,26 +41,23 @@ def process_news_articles_by_time_period(
         date_from: datetime, date_to: datetime, 
         countries: list[str]=settings.NEWS_COUNTRIES, languages: list[str]=settings.NEWS_LANGUAGES
     ):
-    """it will split up 
+    """it will split up date into series of single days.
+    meant to be called from management command
     """
     _log.info(f"--- Starting article processing from {date_from} to {date_to} ---")
 
-    task_results = []  # To store async task results
+    total_count = 0
 
+    # Break down to 1 day period for better management
     for df, dt in utils.split_into_days(date_from, date_to):
-        task = fetch_and_rewrite_news_articles.delay(df, dt, countries, languages)
-        task_results.append(task)
+        _log.info(f"Calling task: fetch_and_rewrite_news_articles. for {(df, dt, countries, languages)}")
 
-    _log.info(f"--- Finished queuing article processing tasks from {date_from} to {date_to} ---")
+        count = fetch_and_rewrite_news_articles(df, dt, countries, languages)
+        total_count += count
 
-    total_modified_records = 0
-    for task in task_results:
-        result = task.get()  
-        total_modified_records += result if result and isinstance(result, int) else 0
+        _log.info(f'Finished fetch_and_rewrite_news_articles for {(df, dt)}.  count: {count}')
 
-    _log.info(f"--- Total modified records: {total_modified_records} ---")
-
-    return total_modified_records
+    return total_count
 
 
 @app.task
@@ -70,11 +67,17 @@ def process_latest_news_articles(hours):
 
     _log.info(f"--- Starting article processing from {date_from} to {date_to} ---")
 
-    count = fetch_and_rewrite_news_articles(
-        date_from, date_to, settings.NEWS_COUNTRIES, settings.NEWS_LANGUAGES
-    )
+    # break into hours for faster fetch
+    for df, dt in utils.split_into_hours(date_from, date_to):
+        _log.info(
+            "Distributing task: fetch_and_rewrite_news_articles " +
+            "for {( df, dt, settings.NEWS_COUNTRIES, settings.NEWS_LANGUAGES)}"
+        )
 
-    _log.info(f"--- Finished article processing ---")
-    _log.info(f"--- Total modified records: {count} ---")
+        fetch_and_rewrite_news_articles.delay(
+            df, dt, settings.NEWS_COUNTRIES, settings.NEWS_LANGUAGES
+        )
 
-    return count
+    _log.info(f"--- Finished Distributing task fetch_and_rewrite_news_articles ---")
+
+    return

@@ -122,4 +122,3 @@ class TestChannelHandlers(TestCase):
                     call(dt3, dt4, source.id, ['en'])
                 ]
             )
-
