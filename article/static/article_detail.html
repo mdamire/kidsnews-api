@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ article.modified_record.title }}</title>
+</head>
+<body>
+    <h1>{{ article.modified_record.title }}</h1>
+    <p>{{ article.modified_record.content }}</p>
+    <a href="{% url 'article-list-http' %}">Back to list</a>
+</body>
+</html>

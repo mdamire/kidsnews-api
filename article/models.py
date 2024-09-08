@@ -66,4 +66,3 @@ class ModifiedArticleRecord(TimeStampedModel):
     title = models.TextField()
     content = models.TextField()
     description = models.TextField(blank=True, null=True)
-
