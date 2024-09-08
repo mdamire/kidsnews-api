@@ -39,7 +39,7 @@ To make sure the this functionality work add `TNA_API_KEY` and `CHATGPT_API_KEY`
 #### Mannual process
 Fetch a data manually between a time period:
 ```bash
-python manage.py fetch_articles --date-from '2024-1-1' --date-to '2024-2-1'
+python manage.py fetch_articles '2024-09-01' '2024-09-02'
 ```
 
 #### Automated process
@@ -50,7 +50,7 @@ There is a celery beat schedule that runs every 6 hours and generates last 6 hou
 Create user by using superuser command or from admin. Use the user's username and password for basic http authentication.
 These endpoint has a ratelimit of 1000 requests per hour.
 
-#### GET - /articles
+#### GET - /api/articles
 - return list of articles
 - Filter keys:
     - author
@@ -59,5 +59,5 @@ These endpoint has a ratelimit of 1000 requests per hour.
     - published_at_lte
 - Can be searched via title
 
-#### GET - /article/{id}
+#### GET - /api/article/{id}
 - returns details of an article
