@@ -9,7 +9,7 @@ from django.utils import timezone
 from article.repository import create_newschannel_fetch_log, get_or_create_news_source
 from ..article import ArticlePage, Article
 from .client import NewsApiClient
-from .utils import get_unfetched_time_ranges
+from ..utils import get_unfetched_time_ranges
 from ..enums import NewsChannels
 
 
