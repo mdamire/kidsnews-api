@@ -64,7 +64,7 @@ def save_article_pages(article_pages: list[ArticlePage]):
         try:
             ArticleRecord.objects.bulk_create(record_objs, ignore_conflicts=True)
             total_record_objs += record_objs
-        except Exception:
+        except Exception as exc:
             try:
                 NewsChannelFetchLog.objects.get(id=article_page.fetch_log_id).delete()
             except NewsChannelFetchLog.DoesNotExist:
@@ -73,7 +73,8 @@ def save_article_pages(article_pages: list[ArticlePage]):
             from django.forms.models import model_to_dict
             [_log.info(model_to_dict(record)) for record in record_objs]
             
-            raise
+            _log.exception(exc)
+            continue
         
     
     return total_record_objs
