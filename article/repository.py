@@ -8,7 +8,7 @@ import logging
 from django.db import transaction
 
 from .channel.article import ArticlePage
-from .models import ArticleRecord, NewsApiFetchLog, NewsSource, ModifiedArticleRecord
+from .models import ArticleRecord, NewsChannelFetchLog, NewsSource, ModifiedArticleRecord
 
 
 _log = logging.getLogger(__name__)
@@ -78,9 +78,10 @@ def bulk_create_or_update_modified_records(records: list[ModifiedArticleRecord])
 
 
 
-def create_newsapi_fetch_log(date_from, date_to, source_id) -> NewsApiFetchLog:
-    return NewsApiFetchLog.objects.create(
+def create_newschannel_fetch_log(date_from, date_to, channel_name, source_id) -> NewsChannelFetchLog:
+    return NewsChannelFetchLog.objects.create(
         date_from=date_from,
         date_to=date_to,
+        channel_name=channel_name,
         source_id=source_id
     )

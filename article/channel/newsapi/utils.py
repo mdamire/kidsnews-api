@@ -1,11 +1,12 @@
 from django.db.models import Q
 
-from article.models import NewsApiFetchLog
+from article.models import NewsChannelFetchLog
 
 
-def get_unfetched_time_ranges(date_from, date_to, source_id):
+def get_unfetched_time_ranges(date_from, date_to, channel_name, source_id):
     # Fetch all successful logs for the given source and within the date range
-    successful_logs = NewsApiFetchLog.objects.filter(
+    successful_logs = NewsChannelFetchLog.objects.filter(
+        Q(channel_name=channel_name) &
         Q(source_id=source_id) & 
         Q(success=True) & 
         (

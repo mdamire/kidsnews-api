@@ -37,8 +37,8 @@ class TestChannelHandlers(TestCase):
             for i in article_pages_list[0]:
                 self.assertIsInstance(i, ArticlePage)
             
-            self.assertEqual(models.NewsApiFetchLog.objects.all().count(), 1)
-            self.assertTrue(models.NewsApiFetchLog.success)
+            self.assertEqual(models.NewsChannelFetchLog.objects.all().count(), 1)
+            self.assertTrue(models.NewsChannelFetchLog.success)
 
     def test_fetch_article_pages_3_source(self):
         with (
@@ -60,13 +60,13 @@ class TestChannelHandlers(TestCase):
             for i in article_pages_list[0]:
                 self.assertIsInstance(i, ArticlePage)
             
-            self.assertEqual(models.NewsApiFetchLog.objects.all().count(), 3)
+            self.assertEqual(models.NewsChannelFetchLog.objects.all().count(), 3)
     
     def test_already_fetched_dates(self):
         dt1 = timezone.now() - timedelta(days=10)
         dt2 = timezone.now() - timedelta(days=9)
         source = factories.NewsSourceFactory(id='cbc-news')
-        factories.NewsApiFetchLogFactory(
+        factories.NewsChannelFetchLogFactory(
             source=source,
             date_from=dt2
         )
@@ -92,12 +92,12 @@ class TestChannelHandlers(TestCase):
         dt3 = timezone.now() - timedelta(days=8)
         dt4 = timezone.now() - timedelta(days=7)
         source = factories.NewsSourceFactory(id='cbc-news')
-        factories.NewsApiFetchLogFactory(
+        factories.NewsChannelFetchLogFactory(
             source=source,
             date_from=dt2,
             date_to=dt3
         )
-        factories.NewsApiFetchLogFactory(
+        factories.NewsChannelFetchLogFactory(
             source=source,
             date_from=dt4
         )

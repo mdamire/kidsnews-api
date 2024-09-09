@@ -18,9 +18,10 @@ class NewsSource(models.Model):
         return self.name
 
 
-class NewsApiFetchLog(TimeStampedModel):
+class NewsChannelFetchLog(TimeStampedModel):
     date_from = models.DateTimeField()
     date_to = models.DateTimeField()
+    channel_name = models.CharField(max_length=200)
 
     source = models.ForeignKey(NewsSource, on_delete=models.CASCADE)
 

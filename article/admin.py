@@ -32,9 +32,9 @@ class ArticleRecordAdmin(admin.ModelAdmin):
         return obj.modified_record.description
 
 
-@admin.register(models.NewsApiFetchLog)
-class NewsApiFetchLogAdmin(admin.ModelAdmin):
-    list_display = ('id', 'date_from', 'date_to', 'source', 'success')
+@admin.register(models.NewsChannelFetchLog)
+class NewsChannelFetchLogAdmin(admin.ModelAdmin):
+    list_display = ('id', 'channel_name', 'date_from', 'date_to', 'source', 'success')
 
 
 @admin.register(models.NewsSource)

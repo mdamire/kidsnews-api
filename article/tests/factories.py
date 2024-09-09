@@ -6,6 +6,7 @@ import factory
 
 from article import models
 from article.channel.article import Article, ArticlePage
+from article.channel.enums import NewsChannels
 
 
 def random_string(length=10):
@@ -104,12 +105,13 @@ class NewsSourceFactory(factory.django.DjangoModelFactory):
     country = factory.Faker('country_code')
 
 
-class NewsApiFetchLogFactory(factory.django.DjangoModelFactory):
+class NewsChannelFetchLogFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = models.NewsApiFetchLog
+        model = models.NewsChannelFetchLog
 
     date_from = factory.LazyFunction(lambda: timezone.now() - datetime.timedelta(days=1))
     date_to = factory.LazyFunction(timezone.now)
+    channel_name = NewsChannels.NEWSAPI.value
     source = factory.SubFactory(NewsSourceFactory)
     success = True
     exception = None

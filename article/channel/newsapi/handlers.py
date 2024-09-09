@@ -6,10 +6,11 @@ import pytz
 from django.conf import settings
 from django.utils import timezone
 
-from article.repository import create_newsapi_fetch_log, get_or_create_news_source
+from article.repository import create_newschannel_fetch_log, get_or_create_news_source
 from ..article import ArticlePage, Article
 from .client import NewsApiClient
 from .utils import get_unfetched_time_ranges
+from ..enums import NewsChannels
 
 
 _log = logging.getLogger(__name__)
@@ -83,7 +84,7 @@ def fetch_article_pages(
         source_pages = []
 
         # create a unfetched time range
-        unfetched_time_ranges = get_unfetched_time_ranges(date_from, date_to, source_id)
+        unfetched_time_ranges = get_unfetched_time_ranges(date_from, date_to, NewsChannels.NEWSAPI.value, source_id)
         if not unfetched_time_ranges:
             _log.info(f'Fetched news api data before. date_from:{date_from} date_to:{date_to}, source: {source_id}')
             return
@@ -92,9 +93,10 @@ def fetch_article_pages(
         for udf, udt in unfetched_time_ranges:
             _log.info(f'Feching news api data for date_from:{udf} date_to:{udt}, source:{source_id}')
 
-            fetch_log = create_newsapi_fetch_log(
+            fetch_log = create_newschannel_fetch_log(
                 date_from=udf,
                 date_to=udt,
+                channel_name=NewsChannels.NEWSAPI.value,
                 source_id=source_id,
             )
 
