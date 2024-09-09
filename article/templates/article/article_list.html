@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Article List</title>
+</head>
+<body>
+    <h1>Articles</h1>
+
+    <form method="GET">
+        <label for="source">Source:</label>
+        <select name="source">
+            <option value="">All</option>
+            {% for source in filterset.filters.source.queryset %}
+                <option value="{{ source.id }}" {% if request.GET.source == source.id %}selected{% endif %}>
+                    {{ source.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="author">Author:</label>
+        <input type="text" name="author" value="{{ request.GET.author }}">
+
+        <label for="published_at_gte">Published From:</label>
+        <input type="date" name="published_at_gte" value="{{ request.GET.published_at_gte }}">
+
+        <label for="published_at_lte">Published To:</label>
+        <input type="date" name="published_at_lte" value="{{ request.GET.published_at_lte }}">
+
+        <button type="submit">Filter</button>
+    </form>
+
+    <ul>
+        {% for article in articles %}
+            <li>
+                <a href="{% url 'article-detail-http' article.id %}">{{ article.modified_record.title }}</a>
+                (Source: {{ article.source.name }})
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
