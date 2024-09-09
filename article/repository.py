@@ -53,7 +53,8 @@ def save_article_pages(article_pages: list[ArticlePage]):
                     url=article.url,
                     image_url=article.image_url,
                     channel_name=article_page.channel_name,
-                    channel_response=article.response
+                    channel_response=article.response,
+                    fetch_log_id=article_page.fetch_log_id
                 )
             )
         

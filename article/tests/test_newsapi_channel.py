@@ -39,6 +39,7 @@ class TestChannelHandlers(TestCase):
             
             self.assertEqual(models.NewsChannelFetchLog.objects.all().count(), 1)
             self.assertTrue(models.NewsChannelFetchLog.success)
+            self.assertEqual(str(i.fetch_log_id), str(models.NewsChannelFetchLog.objects.first().id))
 
     def test_fetch_article_pages_3_source(self):
         with (

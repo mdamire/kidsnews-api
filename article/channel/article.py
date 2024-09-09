@@ -25,8 +25,11 @@ class Article():
 
 
 class ArticlePage():
-    def __init__(self, page_number: int, channel: str, articles: list[Article], source_id: str):
+    def __init__(
+            self, page_number: int, channel: str, articles: list[Article], source_id: str, fetch_log_id=None
+        ):
         self.page_number = page_number
         self.channel_name = channel
         self.articles = articles
         self.source_id = source_id
+        self.fetch_log_id = fetch_log_id

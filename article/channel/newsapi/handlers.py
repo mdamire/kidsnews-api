@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 import traceback
+from typing import Generator
 
 import pytz
 from django.conf import settings
@@ -44,7 +45,7 @@ def parse_article_page_from_newsapi_response(response: dict, page: int, source_i
     return article_page
 
 
-def fetch_source_article_page(date_from, date_to, source_id, languages) -> ArticlePage:
+def fetch_source_article_page(date_from, date_to, source_id, languages) -> Generator[ArticlePage, None, None]:
     news_client = NewsApiClient(lang=languages)
 
     # Create page for first response
@@ -101,7 +102,10 @@ def fetch_article_pages(
             )
 
             try:
-                source_pages += list(fetch_source_article_page(udf, udt, source_id, languages))
+                for page in fetch_source_article_page(udf, udt, source_id, languages):
+                    page.fetch_log_id = fetch_log.id
+                    source_pages.append(page)
+            
             except Exception as exc:
                 _log.exception(exc)
                 fetch_log.exception = traceback.format_exc()

@@ -36,6 +36,21 @@ class ArticleRecordAdmin(admin.ModelAdmin):
 class NewsChannelFetchLogAdmin(admin.ModelAdmin):
     list_display = ('id', 'channel_name', 'date_from', 'date_to', 'source', 'success')
 
+    def _articles_fetched(self, obj):
+        if not obj.success:
+            return
+        return obj.fetched_articles().count()
+    
+    def _modified_articles(self, obj):
+        if not obj.success:
+            return
+        return obj.modified_articles().count()
+    
+    def _articles_with_bad_words(self, obj):
+        if not obj.success:
+            return
+        return obj.articles_with_bad_words().count()
+
 
 @admin.register(models.NewsSource)
 class NewsSourceAdmin(admin.ModelAdmin):

@@ -109,7 +109,7 @@ class NewsChannelFetchLogFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.NewsChannelFetchLog
 
-    date_from = factory.LazyFunction(lambda: timezone.now() - datetime.timedelta(days=1))
+    date_from = factory.LazyFunction(lambda: timezone.now() - timedelta(days=1))
     date_to = factory.LazyFunction(timezone.now)
     channel_name = NewsChannels.NEWSAPI.value
     source = factory.SubFactory(NewsSourceFactory)
@@ -135,12 +135,13 @@ def make_article(serial=1, title=None):
     )
 
 
-def make_article_page(article_num, page_number, source_id):
+def make_article_page(article_num, page_number, source_id, fetch_log_id=None):
     return ArticlePage(
         page_number=page_number,
         channel='test',
         articles=[make_article(i) for i in range(1, article_num+1) ],
-        source_id=source_id
+        source_id=source_id,
+        fetch_log_id=fetch_log_id
     )
 
 

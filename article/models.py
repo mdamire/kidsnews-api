@@ -28,10 +28,26 @@ class NewsChannelFetchLog(TimeStampedModel):
     success = models.BooleanField(default=False)
     exception = models.TextField(blank=True, null=True)
 
+    def fetched_articles(self):
+        return ArticleRecord.objects.filter(fetch_log=self)
+
+    # Function to return the number of modified articles
+    def modified_articles(self):
+        return ModifiedArticleRecord.objects.filter(article__fetch_log=self)
+
+    # Function to return the number of articles that have title_bad_words
+    def articles_with_bad_words(self):
+        return ArticleRecord.objects.filter(
+            fetch_log=self, title_bad_words__isnull=False
+        ).exclude(
+            title_bad_words__exact=''
+        )
+
 
 class ArticleRecord(TimeStampedModel):
     id = models.CharField(max_length=64, primary_key=True)
     source = models.ForeignKey(NewsSource, on_delete=models.CASCADE)
+    fetch_log = models.ForeignKey(NewsChannelFetchLog, on_delete=models.SET_NULL, null=True, blank=True)
 
     author = models.CharField(max_length=500)
     published_at = models.DateTimeField()

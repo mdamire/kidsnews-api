@@ -27,7 +27,7 @@ def get_secret(secret, default=None):
     value = os.getenv(secret, sentinal)
 
     if value is sentinal:
-        _log.warning(f'Secret not found for {secret}. Setting to default value')
+        _log.debug(f'Secret not found for {secret}. Setting to default value')
         return default
     
     return value
