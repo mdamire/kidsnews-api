@@ -37,7 +37,7 @@ def parse_article_page_from_newsapi_response(response: dict, page: int, source_i
     
     article_page = ArticlePage(
         page_number=page,
-        channel='news-api',
+        channel=NewsChannels.NEWSAPI.value,
         articles=articles,
         source_id=source_id
     )

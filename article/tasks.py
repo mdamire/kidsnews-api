@@ -43,8 +43,9 @@ def fetch_and_rewrite_news_articles(
 
 
 def process_news_articles_by_time_period(
-        date_from: datetime, date_to: datetime, 
-        countries: list[str]=settings.NEWS_COUNTRIES, languages: list[str]=settings.NEWS_LANGUAGES
+        date_from: datetime, date_to: datetime,
+        countries: list[str]=settings.NEWS_COUNTRIES, languages: list[str]=settings.NEWS_LANGUAGES,
+        split: str='day'
     ):
     """it will split up date into series of single days.
     meant to be called from management command
@@ -53,8 +54,15 @@ def process_news_articles_by_time_period(
 
     total_count = 0
 
+    if split == 'hour':
+        time_split = utils.split_into_hours(date_from, date_to)
+    elif split == 'day':
+        time_split = utils.split_into_days(date_from, date_to)
+    else:
+        time_split = [(date_from, date_to)]
+    
     # Break down to 1 day period for better management
-    for df, dt in utils.split_into_days(date_from, date_to):
+    for df, dt in time_split:
         _log.info(f"Calling task: fetch_and_rewrite_news_articles. for {(df, dt, countries, languages)}")
 
         count = fetch_and_rewrite_news_articles(df, dt, countries, languages)

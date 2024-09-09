@@ -49,11 +49,11 @@ class ArticleRecord(TimeStampedModel):
     source = models.ForeignKey(NewsSource, on_delete=models.CASCADE)
     fetch_log = models.ForeignKey(NewsChannelFetchLog, on_delete=models.SET_NULL, null=True, blank=True)
 
-    author = models.CharField(max_length=500)
-    published_at = models.DateTimeField()
+    author = models.CharField(max_length=500, blank=True, null=True)
+    published_at = models.DateTimeField(blank=True, null=True)
 
     title = models.TextField()
-    content = models.TextField()
+    content = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
     channel_name = models.CharField(max_length=64)

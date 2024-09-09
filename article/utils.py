@@ -32,5 +32,3 @@ def split_into_hours(date_from, date_to):
         current_start = current_end
     
     return hour_list
-
-

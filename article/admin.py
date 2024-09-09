@@ -5,12 +5,16 @@ from . import models
 
 @admin.register(models.ArticleRecord)
 class ArticleRecordAdmin(admin.ModelAdmin):
-    list_display = ('id', 'author', 'published_at', 'title', '_has_rewritten')
+    list_display = ('id', 'author', 'published_at', 'title', 'fetch_log__id', '_has_rewritten')
     readonly_fields = ('_modified_title', '_modified_content', '_modified_description')
-    search_fields = ('author', 'title', 'title')
+    search_fields = ('author', 'title', 'title', 'fetch_log__id')
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('modified_record')
+        return super().get_queryset(request).select_related(
+            'modified_record'
+        ).select_related(
+            'fetch_log'
+        )
 
     def _has_rewritten(self, obj):
         return bool(hasattr(obj, 'modified_record') and obj.modified_record)
@@ -34,7 +38,10 @@ class ArticleRecordAdmin(admin.ModelAdmin):
 
 @admin.register(models.NewsChannelFetchLog)
 class NewsChannelFetchLogAdmin(admin.ModelAdmin):
-    list_display = ('id', 'channel_name', 'date_from', 'date_to', 'source', 'success')
+    list_display = (
+        'id', 'channel_name', 'date_from', 'date_to', 'source', 'success', '_articles_fetched', 
+        '_modified_articles', '_articles_with_bad_words'
+    )
 
     def _articles_fetched(self, obj):
         if not obj.success:
