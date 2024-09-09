@@ -29,10 +29,15 @@ def fetch_and_rewrite_news_articles(
         _log.info(f"article_records created: {len(article_records)}")
 
         _log.info("modifing article records")
-        modified_records = rewrite_articles(article_records)
-        _log.info(f"modified records created: {len(modified_records)}")
+        try:
+            modified_records = rewrite_articles(article_records)
 
-        modified_count += len(modified_records)
+        except Exception as exc:
+            _log.exception(exc)
+
+        else:
+            _log.info(f"modified records created: {len(modified_records)}")
+            modified_count += len(modified_records)
     
     return modified_count
 
