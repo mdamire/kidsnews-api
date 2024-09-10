@@ -4,8 +4,10 @@ Easy place to include additional actions with database actions.
 """
 import hashlib
 import logging
+from typing import Generator
 
 from django.db import transaction
+from django.db.models import Q
 
 from .channel.article import ArticlePage
 from .models import ArticleRecord, NewsChannelFetchLog, NewsSource, ModifiedArticleRecord
@@ -101,3 +103,16 @@ def create_newschannel_fetch_log(date_from, date_to, channel_name, source_id) ->
         channel_name=channel_name,
         source_id=source_id
     )
+
+
+def get_articles_for_rewriting(date_from, date_to, chunk_size=100) -> list[ArticleRecord]:
+    articles = ArticleRecord.objects.filter(
+        published_at__gte=date_from,
+        published_at__lte=date_to,
+        modified_record__isnull=True,
+        title_bad_words__isnull=True
+    ).exclude(
+        title_bad_words=''
+    ).order_by('published_at')
+
+    return articles

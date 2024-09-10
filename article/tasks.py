@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from kidsnews.celery import app
 from .rewrite.handlers import rewrite_articles
-from .repository import save_article_pages
+from .repository import save_article_pages, get_articles_for_rewriting
 from .channel.handlers import fetch_article_pages
 from . import utils
 
@@ -42,6 +42,18 @@ def fetch_and_rewrite_news_articles(
     return modified_count
 
 
+def get_and_rewrite_news_articles(date_from: datetime, date_to: datetime):
+    article_records = get_articles_for_rewriting(date_from, date_to)
+    
+    _log.info(
+        f"Records found from get and rewrite: {article_records.count()}. "
+        f"date from: {date_from}; date to: {date_to}."
+    )
+    rewrite_count = rewrite_articles(article_records) if article_records else 0
+    
+    return rewrite_count
+
+
 def process_news_articles_by_time_period(
         date_from: datetime, date_to: datetime,
         countries: list[str]=settings.NEWS_COUNTRIES, languages: list[str]=settings.NEWS_LANGUAGES,
@@ -54,6 +66,7 @@ def process_news_articles_by_time_period(
 
     total_count = 0
 
+    # Break down to time period for better management
     if split == 'hour':
         time_split = utils.split_into_hours(date_from, date_to)
     elif split == 'day':
@@ -61,14 +74,22 @@ def process_news_articles_by_time_period(
     else:
         time_split = [(date_from, date_to)]
     
-    # Break down to 1 day period for better management
     for df, dt in time_split:
+        # fetch and rewrite new articles
         _log.info(f"Calling task: fetch_and_rewrite_news_articles. for {(df, dt, countries, languages)}")
 
         count = fetch_and_rewrite_news_articles(df, dt, countries, languages)
         total_count += count
 
         _log.info(f'Finished fetch_and_rewrite_news_articles for {(df, dt)}.  count: {count}')
+    
+        # retry to rewrite leftout articles
+        try:
+            rc = get_and_rewrite_news_articles(df, dt)
+            if rc:
+                _log.info(f'Rewritted existing articles published from {df} to {dt}. count: {rc}')
+        except Exception as exc:
+            _log.exception(exc)
 
     return total_count
 
