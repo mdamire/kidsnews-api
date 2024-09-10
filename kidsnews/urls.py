@@ -28,5 +28,5 @@ urlpatterns = [
     path('api/articles/<uuid:id>', ArticleRecordDetailView.as_view(), name='article-detail'),
 
     path('articles/', article_list_view, name='article-list-http'),
-    path('articles/<uuid:id>/', article_detail_view, name='article-detail-http'),
+    path('articles/<str:id>/', article_detail_view, name='article-detail-http'),
 ]
